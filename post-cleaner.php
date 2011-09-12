@@ -28,7 +28,7 @@ License: A "Slug" license name e.g. GPL2
 add_action('admin_menu', 'post_clean_menu');
 
 //Define plugin path
-define('WP_PLUGIN_URL', ABSPATH . 'wp-content/plugins/post-clean');
+define('WP_PLUGIN_URL', ABSPATH . 'wp-content/plugins/post-content-cleaner');
 
 //plugin installation
 //create ew table upon activating plugin
