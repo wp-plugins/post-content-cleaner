@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Post Content Cleaner
-Plugin URI: http://www.hebeisenconsulting.com
+Plugin URI: http://hebeisenconsulting.com/wordpress-post-content-cleaner/
 Description:  Clean up unwanted P, DIV, SPAN, tag parameters, multiple spaces and &nbsp; characters. Using the plugin as a filter avoids permanent changes to posts.
 Version: 1.0
 Author: Hebeisen Consulting - R Bueno

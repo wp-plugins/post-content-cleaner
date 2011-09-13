@@ -1,6 +1,6 @@
 === Post Content Cleaner ===
 Contributors: hebeisenconsulting
-Donate link: http://hebeisenconsulting.com/
+Donate link: http://hebeisenconsulting.com/wordpress-post-content-cleaner/
 Tags: post content cleaner, post cleaner, html strip, html tag remove
 Requires at least: 3.0
 Tested up to: 3.2
