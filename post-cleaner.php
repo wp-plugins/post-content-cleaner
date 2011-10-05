@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Post Content Cleaner
-Plugin URI: http://hebeisenconsulting.com/wordpress-post-content-cleaner/
-Description:  Clean up unwanted P, DIV, SPAN, tag parameters, multiple spaces and &nbsp; characters. Using the plugin as a filter avoids permanent changes to posts.
-Version: 1.0
+Plugin URI: http://www.hebeisenconsulting.com
+Description:  Clean up unwanted P, DIV, SPAN, tag parameters, multiple spaces and \n characters. Using the plugin as a filter avoids permanent changes to posts.
+Version: 1.1
 Author: Hebeisen Consulting - R Bueno
 Author URI: http://www.hebeisenconsulting.com
 License: A "Slug" license name e.g. GPL2
@@ -28,7 +28,7 @@ License: A "Slug" license name e.g. GPL2
 add_action('admin_menu', 'post_clean_menu');
 
 //Define plugin path
-define('WP_PLUGIN_URL', ABSPATH . 'wp-content/plugins/post-content-cleaner');
+define('WP_PLUGIN_URL', ABSPATH . 'wp-content/plugins/post-clean');
 
 //plugin installation
 //create ew table upon activating plugin
@@ -45,6 +45,7 @@ function post_clean_install()
 						  allowed_tag INT(1) NOT NULL,
 						  allowed_param INT(1) NOT NULL,
 						  strip_type varchar(10) NOT NULL,
+						  replacement varchar(100) NOT NULL,
 						  PRIMARY KEY (id)
 						)";
 			require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -59,15 +60,20 @@ function post_clean_install_add_data()
 	$table = $wpdb->prefix . "post_clean";
 	//add data
 	//div
-	$wpdb->insert( $table, array( 'id' => '1', 'html_tag' => '<div>', 'html_tag_simplify' => 'div', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '' ) );
+	$wpdb->insert( $table, array( 'id' => '1', 'html_tag' => '<div>', 'html_tag_simplify' => 'div', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '', 'replacement' => '' ) );
 	//p
-	$wpdb->insert( $table, array( 'id' => '2', 'html_tag' => '<p>', 'html_tag_simplify' => 'p', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '' ) );
+	$wpdb->insert( $table, array( 'id' => '2', 'html_tag' => '<p>', 'html_tag_simplify' => 'p', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '', 'replacement' => ''  ) );
 	//span
-	$wpdb->insert( $table, array( 'id' => '3', 'html_tag' => '<span>', 'html_tag_simplify' => 'span', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '' ) );
+	$wpdb->insert( $table, array( 'id' => '3', 'html_tag' => '<span>', 'html_tag_simplify' => 'span', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '', 'replacement' => ''  ) );
 	//$nbsp;
-	$wpdb->insert( $table, array( 'id' => '4', 'html_tag' => '$nbsp;', 'html_tag_simplify' => '$nbsp;', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '' ) );
+	$wpdb->insert( $table, array( 'id' => '4', 'html_tag' => '$nbsp;', 'html_tag_simplify' => '$nbsp;', 'allowed_tag' => '1', 'allowed_param' => '1', 'strip_type' => '', 'replacement' => ''  ) );	
 	//filter type
-	$wpdb->insert( $table, array( 'id' => '5', 'html_tag' => '', 'html_tag_simplify' => '', 'allowed_tag' => '0', 'allowed_param' => '1', 'strip_type' => 'filter' ) );
+	$wpdb->insert( $table, array( 'id' => '5', 'html_tag' => '', 'html_tag_simplify' => '', 'allowed_tag' => '0', 'allowed_param' => '1', 'strip_type' => 'filter', 'replacement' => ''  ) );
+	//BR;
+	$wpdb->insert( $table, array( 'id' => '6', 'html_tag' => 'br', 'html_tag_simplify' => 'br', 'allowed_tag' => '1', 'allowed_param' => '0', 'strip_type' => '', 'replacement' => ''  ) );
+	//\n;
+	$wpdb->insert( $table, array( 'id' => '7', 'html_tag' => '\n', 'html_tag_simplify' => '\n', 'allowed_tag' => '0', 'allowed_param' => '1', 'strip_type' => '', 'replacement' => ''  ) );
+
 }
 register_activation_hook(__FILE__,'post_clean_install');
 register_activation_hook(__FILE__,'post_clean_install_add_data');
@@ -188,6 +194,25 @@ function post_clean_head()
 			//document.getElementsByName(sName)[0].checked == false;
 		}
 	}
+
+	function checkBR()
+	{
+		//var boxes = document.getElementsByName(sName);
+		if (document.getElementsByName("yesBR")[0].checked == true)
+		{
+			document.getElementsByName("noBR")[0].checked = true;
+		}	
+	}
+	function uncheckBR(varName)
+	{
+		if (document.getElementsByName(varName)[0].checked == true)
+		{
+			//alert('hi');
+			//document.getElementsByName(sName)[0].checked == false;
+			document.getElementsByName("noBR")[0].checked = true;
+			//document.getElementsByName(sName)[0].checked == false;
+		}
+	}
 </script>
 <?php
 }
@@ -271,7 +296,43 @@ function post_cleaner_option(){
 				$wpdb->query( "UPDATE wp_post_clean SET allowed_tag = '0', allowed_param = '1' WHERE id = '4'" );
 				echo '<div id="message" class="updated fade"><p>All &#38;nbsp&#59; tags have been stripped.</p></div>';
 			}
-			*/
+			*/		
+		// two br's have are checked
+		if ( isset( $_POST['yesBR'] ) && isset($_POST['noBR']) )
+			{
+				echo '<div id="message" class="updated fade"><p>Only one choice is allowed.</p></div>';
+			}
+		else
+			{
+				// replace br with new line
+				if ( isset( $_POST['yesBR'] ) )
+					{
+						$wpdb->query( "UPDATE wp_post_clean SET replacement = 'new_line' WHERE id = '6'" );
+						echo '<div id="message" class="updated fade"><p>All BR tags has been replaced by \n.</p></div>';
+					}
+				// replace br with space
+				if ( isset( $_POST['noBR'] ) )
+					{
+						$wpdb->query( "UPDATE wp_post_clean SET replacement = 'space' WHERE id = '6'" );
+						echo '<div id="message" class="updated fade"><p>All BR tags has been replaced by space.</p></div>';
+					}
+			}
+		//all br's have not been set
+		if ( !isset( $_POST['yesBR'] ) && !isset($_POST['noBR']) )
+			{
+				$wpdb->query( "UPDATE wp_post_clean SET replacement = '' WHERE id = '6'" );
+			}
+		// replace \n with space
+		if ( isset( $_POST['replace-n-with-space'] ) )
+			{
+				$wpdb->query( "UPDATE wp_post_clean SET replacement = 'space' WHERE id = '7'" );
+				echo '<div id="message" class="updated fade"><p>All \n tags has been replaced by space.</p></div>';
+			}
+		// revert changes of \n
+		if ( !isset( $_POST['replace-n-with-space'] ) )
+			{
+				$wpdb->query( "UPDATE wp_post_clean SET replacement = '' WHERE id = '7'" );
+			}
 		//strip type filter
 		if ( isset( $_POST['filter-only'] ) )
 			{
@@ -294,6 +355,8 @@ function post_cleaner_option(){
 					{
 						$strip_type = $strip_type->strip_type;
 					}
+			$rplcmnt_br = $wpdb->get_row("SELECT * FROM wp_post_clean WHERE id = 6");
+			//echo $rplcmnt_br->replacement;
 ?>
 			<div class="wrap">
 			
@@ -349,12 +412,29 @@ function post_cleaner_option(){
 			   <tr>
 			    <td style="padding-left:30px;"><input type = "checkbox" name = "strip-white-space" value = "strip-entire-space" > Replace multiple ' ' spaces with a single ' ' space.</td>
 			   </tr>
+
+			   <tr>
+			    <td><h4>Breaks</h4></td>
+			   </tr>
+			   <tr>
+			    <td style="padding-left:30px;"><input type = "checkbox" name = "yesBR" value = "strip-entire-nbsp"> Replace &#60;BR&#62; and its variations with a \n.</td>
+			   </tr>
+			   <tr>
+			    <td style="padding-left:30px;"><input type = "checkbox" name = "noBR" value = "strip-entire-space"> Replace &#60;BR&#62; and its variations with a space.</td>
+			   </tr>
+
+			   <tr>
+			    <td><h4>Newline</h4></td>
+			   </tr>
+			   <tr>
+			    <td style="padding-left:30px;"><input type = "checkbox" name = "replace-n-with-space" value = "strip-entire-space" > Replace \n and its variations with a space.</td>
+			   </tr>
 			   
 			   <tr>
 			    <td><h4>General Settings</h4></td>
 			   </tr>
 			   <tr>
-			    <td style="padding-left:30px;"><input type = "checkbox" name = "filter-only" value = "filter-only" onchange="CheckBoxesByName('clean-post', 2)" checked> Apply stripping as a filter only (Recommended - This does not touch the original post's content, it simply alters how it is rendered on the loaded page.)</td>
+			    <td style="padding-left:30px;"><input type = "checkbox" name = "filter-only" value = "filter-only" onchange="CheckBoxesByName('clean-post', 2)" checked> Apply stripping as a filter only (Recommended - This does not touch the original posts content, it simply alters how it is rendered on the loaded page.)</td>
 			   </tr>
 			   <tr>
 			    <td style="padding-left:30px;"><input type = "checkbox" name = "clean-post" value = "clean-post" onchange="CheckBoxesByName('filter-only', 2)" > Perform stripping on post data in database (Warning - not reversible. This will perform the above fixes on the post data in the database. The plugin can then be removed or disabled after the stripping is complete.)</td>
@@ -393,7 +473,36 @@ function html_strip( $content )
 		{
 			$PostClean_stripped = preg_replace("/\[(.*?)\]\s*(.*?)\s*\[\/(.*?)\]/", "", html_entity_decode($PostClean_stripped));
 		}
-		
+	
+	//check if br has replacement
+	$rplcmnt_br = $wpdb->get_row("SELECT * FROM wp_post_clean WHERE id = 6");
+	if( $rplcmnt_br->replacement == "space")
+		{
+			$PostClean_stripped = preg_replace("/<br>/i", " ", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<br\/>/i", " ", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<br \/>/i", " ", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<BR>/i", " ", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<BR\/>/i", " ", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<BR \/>/i", " ", html_entity_decode($PostClean_stripped));
+		}
+	if( $rplcmnt_br->replacement == "new_line")
+		{
+			$PostClean_stripped = preg_replace("/<br>/i", "\n", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<br\/>/i", "\n", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<br \/>/i", "\n", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<BR>/i", "\n", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<BR\/>/i", "\n", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/<BR \/>/i", "\n", html_entity_decode($PostClean_stripped));
+		}
+	
+	//check if \n has replacement
+	$rplcmnt_n = $wpdb->get_row("SELECT * FROM wp_post_clean WHERE id = 7");
+	if( $rplcmnt_br->replacement == "space")
+		{		
+			$PostClean_stripped = preg_replace("/\n/i", " ", html_entity_decode($PostClean_stripped));
+			$PostClean_stripped = preg_replace("/\r\n/i", " ", html_entity_decode($PostClean_stripped));
+		}
+	
 	//strip all white space
 	$PostClean_stripped = preg_replace('/\s\s+/', "", $PostClean_stripped);
 	
@@ -438,6 +547,20 @@ function html_strip( $content )
 				$PostClean_1 = preg_replace("/<(".$param[0].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_stripped );
 				$PostClean_2 = preg_replace("/<(".$param[1].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_1 );
 				$PostClean = preg_replace("/<(".$param[2].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_2 );
+				return $PostClean;
+				
+		}
+	if($allowed_param_tags == "4")
+		{
+			$id = $wpdb->get_results("SELECT * FROM wp_post_clean WHERE allowed_param = 0;");
+			foreach($id as $id)
+				{
+					$param[] = $id->html_tag_simplify;
+				}
+				$PostClean_1 = preg_replace("/<(".$param[0].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_stripped );
+				$PostClean_2 = preg_replace("/<(".$param[1].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_1 );
+				$PostClean_3 = preg_replace("/<(".$param[2].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_2 );
+				$PostClean = preg_replace("/<(".$param[3].")[^>]*?(\/?)>/i",'<$1$2>', $PostClean_3 );
 				return $PostClean;
 				
 		}

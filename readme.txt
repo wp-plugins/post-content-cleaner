@@ -4,7 +4,7 @@ Donate link: http://hebeisenconsulting.com/wordpress-post-content-cleaner/
 Tags: post content cleaner, post cleaner, html strip, html tag remove
 Requires at least: 3.0
 Tested up to: 3.2
-Stable tag: 1.0
+Stable tag: 1.1
 
 == Description ==
 
@@ -38,4 +38,14 @@ Not reversible!
 
 = What html tags are currently supported? =
 
-In this version, <span>, <div>, <p>, &nbsp; and white spaces can be removed depending on your choice.
+In this version, &#60;SPAN&#62;, &#60;DIV&#62;, &#60;P&#62;, &#38;nbsp&#59;, &#60;BR&#62;, and white spaces can be removed depending on your choice.
+
+== Changelog ==
+
+= 1.1 =
+
+* Additional html tag has been added.
+* Carriage return and new line in PHP has been added.
+
+= 1.0 =
+* First major release
